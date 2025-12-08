@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/dto/response"
@@ -20,11 +21,11 @@ func AcmeChallenge(w http.ResponseWriter, r *http.Request) {
 	log.Infof("AcmeChallenge: %s", r.URL.Path)
 	instance := ssl.GetHttpChallengeInstance()
 	token := strings.ReplaceAll(r.URL.Path, "/.well-known/acme-challenge/", "")
-	auth, exist := instance.AuthInfo[token]
+	auth, exist := instance.GetAuth(token)
 	if exist {
 		w.Write([]byte(auth.KeyAuth))
 	} else {
-		log.Errorf("AcmeChallenge Error Token Infos:%+v", instance.AuthInfo)
+		log.Errorf("AcmeChallenge Error Token Not Found: %s", token)
 		http.NotFound(w, r)
 	}
 }
@@ -195,14 +196,14 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 				response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
 				return
 			}
+		} else {
+			go func() {
+				time.Sleep(time.Second)
+				setup.Finish()
+			}()
 		}
 
 		response.NewSuccessResponse("Succ").FPrint(w)
-
-		if cast.ToString(reqData["ssl_type"]) == config.SSLTypeUser {
-			setup.Finish()
-		}
 		return
 	}
-
 }

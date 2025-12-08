@@ -50,5 +50,9 @@ export default defineConfig({
       "/api": `http://127.0.0.1:${httpPort}/`,
       "/attachments":`http://127.0.0.1:${httpPort}/`
     }
+  },
+  build: {
+    outDir: '../server/listen/http_server/dist',
+    emptyOutDir: true
   }
 })

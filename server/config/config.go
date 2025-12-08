@@ -71,6 +71,7 @@ const DBTypePostgres = "postgres"
 const SSLTypeAutoHTTP = "0" //自动生成证书
 const SSLTypeAutoDNS = "2"  //自动生成证书，DNS api验证
 const SSLTypeUser = "1"     //用户上传证书
+const SSLTypeNone = "3"     //不使用证书
 
 var DBTypes []string = []string{DBTypeMySQL, DBTypeSQLite, DBTypePostgres}
 

@@ -14,6 +14,9 @@ var instance *gopop.Server
 var instanceTls *gopop.Server
 
 func StartWithTls() {
+	if config.Instance.SSLType == config.SSLTypeNone {
+		return
+	}
 	crt, err := tls.LoadX509KeyPair(config.Instance.SSLPublicKeyPath, config.Instance.SSLPrivateKeyPath)
 	if err != nil {
 		panic(err)
@@ -40,14 +43,19 @@ func StartWithTls() {
 }
 
 func Start() {
-	crt, err := tls.LoadX509KeyPair(config.Instance.SSLPublicKeyPath, config.Instance.SSLPrivateKeyPath)
-	if err != nil {
-		panic(err)
+	var tlsConfig *tls.Config
+
+	if config.Instance.SSLType != config.SSLTypeNone {
+		crt, err := tls.LoadX509KeyPair(config.Instance.SSLPublicKeyPath, config.Instance.SSLPrivateKeyPath)
+		if err != nil {
+			panic(err)
+		}
+		tlsConfig = &tls.Config{}
+		tlsConfig.Certificates = []tls.Certificate{crt}
+		tlsConfig.Time = time.Now
+		tlsConfig.Rand = rand.Reader
 	}
-	tlsConfig := &tls.Config{}
-	tlsConfig.Certificates = []tls.Certificate{crt}
-	tlsConfig.Time = time.Now
-	tlsConfig.Rand = rand.Reader
+
 	var port int
 	if config.Instance.POP3Port == 0 {
 		port = 110
@@ -58,7 +66,7 @@ func Start() {
 	instance.ConnectAliveTime = 5 * time.Minute
 	log.Infof("POP3 Server Start On Port :%d", port)
 
-	err = instance.Start()
+	err := instance.Start()
 	if err != nil {
 		panic(err)
 	}

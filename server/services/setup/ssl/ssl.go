@@ -5,6 +5,10 @@ import (
 	"crypto/ecdsa"
 	"crypto/tls"
 	"crypto/x509"
+	"os"
+	"strings"
+	"time"
+
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/services/setup"
 	"github.com/Jinnrry/pmail/signal"
@@ -14,9 +18,6 @@ import (
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
-	"os"
-	"strings"
-	"time"
 
 	"github.com/go-acme/lego/v4/certcrypto"
 	"github.com/go-acme/lego/v4/lego"
@@ -56,7 +57,7 @@ func SetSSL(sslType, priKey, crtKey string) error {
 	if err != nil {
 		panic(err)
 	}
-	if sslType == config.SSLTypeAutoHTTP || sslType == config.SSLTypeUser || sslType == config.SSLTypeAutoDNS {
+	if sslType == config.SSLTypeAutoHTTP || sslType == config.SSLTypeUser || sslType == config.SSLTypeAutoDNS || sslType == config.SSLTypeNone {
 		cfg.SSLType = sslType
 	} else {
 		return errors.New("SSL Type Error!")
@@ -66,6 +67,10 @@ func SetSSL(sslType, priKey, crtKey string) error {
 		cfg.SSLPrivateKeyPath = priKey
 		cfg.SSLPublicKeyPath = crtKey
 		// 手动设置证书的情况下后台地址默认不启用https
+		cfg.HttpsEnabled = 2
+	}
+
+	if cfg.SSLType == config.SSLTypeNone {
 		cfg.HttpsEnabled = 2
 	}
 
@@ -249,6 +254,10 @@ func GenSSL(update bool) error {
 	cfg, err := config.ReadConfig()
 	if err != nil {
 		panic(err)
+	}
+
+	if cfg.SSLType == config.SSLTypeNone {
+		return nil
 	}
 
 	if !update {

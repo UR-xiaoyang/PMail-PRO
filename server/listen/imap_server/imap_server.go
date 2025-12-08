@@ -23,12 +23,16 @@ func Stop() {
 // StarTLS 启动TLS端口监听，不加密的代码就懒得写了
 func StarTLS() {
 
-	crt, err := tls.LoadX509KeyPair(config.Instance.SSLPublicKeyPath, config.Instance.SSLPrivateKeyPath)
-	if err != nil {
-		panic(err)
-	}
-	tlsConfig := &tls.Config{
-		Certificates: []tls.Certificate{crt},
+	var tlsConfig *tls.Config
+
+	if config.Instance.SSLType != config.SSLTypeNone {
+		crt, err := tls.LoadX509KeyPair(config.Instance.SSLPublicKeyPath, config.Instance.SSLPrivateKeyPath)
+		if err != nil {
+			panic(err)
+		}
+		tlsConfig = &tls.Config{
+			Certificates: []tls.Certificate{crt},
+		}
 	}
 
 	memServer := NewServer()
@@ -41,7 +45,7 @@ func StarTLS() {
 			imap.CapIMAP4rev1: {},
 		},
 		TLSConfig:    tlsConfig,
-		InsecureAuth: false,
+		InsecureAuth: config.Instance.SSLType == config.SSLTypeNone,
 	}
 
 	if config.Instance.LogLevel == "debug" {
@@ -49,14 +53,28 @@ func StarTLS() {
 	}
 
 	instanceTLS = imapserver.New(option)
-	var addr string
-	if config.Instance.IMAPSPort == 0 {
-		addr = ":993"
+
+	if config.Instance.SSLType != config.SSLTypeNone {
+		var addr string
+		if config.Instance.IMAPSPort == 0 {
+			addr = ":993"
+		} else {
+			addr = fmt.Sprintf(":%d", config.Instance.IMAPSPort)
+		}
+		log.Infof("IMAP With TLS Server Start On Port %s", addr)
+		if err := instanceTLS.ListenAndServeTLS(addr); err != nil {
+			panic(err)
+		}
 	} else {
-		addr = fmt.Sprintf(":%d", config.Instance.IMAPSPort)
-	}
-	log.Infof("IMAP With TLS Server Start On Port %s", addr)
-	if err := instanceTLS.ListenAndServeTLS(addr); err != nil {
-		panic(err)
+		var addr string
+		if config.Instance.IMAPPort == 0 {
+			addr = ":143"
+		} else {
+			addr = fmt.Sprintf(":%d", config.Instance.IMAPPort)
+		}
+		log.Infof("IMAP Server Start On Port %s", addr)
+		if err := instanceTLS.ListenAndServe(addr); err != nil {
+			panic(err)
+		}
 	}
 }

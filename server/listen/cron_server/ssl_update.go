@@ -25,7 +25,9 @@ func Start() {
 	if config.Instance.SSLType == config.SSLTypeAutoHTTP || config.Instance.SSLType == config.SSLTypeAutoDNS {
 		go sslUpdateLoop()
 	} else {
-		go sslCheck()
+		if config.Instance.SSLType != config.SSLTypeNone {
+			go sslCheck()
+		}
 	}
 
 }

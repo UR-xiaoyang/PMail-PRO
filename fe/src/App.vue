@@ -18,11 +18,11 @@ watch(
 
 <template>
   <el-container class="main-container">
-    <el-header class="header">
+    <el-header class="header" v-if="pageName !== 'welcome' && pageName !== 'setup'">
       <HomeHeader/>
     </el-header>
     <el-container>
-      <el-aside width="240px" v-if="pageName !== 'login' && pageName !== 'setup'">
+      <el-aside width="240px" v-if="pageName !== 'login' && pageName !== 'setup' && pageName !== 'welcome'">
         <HomeAside/>
       </el-aside>
       <el-main>

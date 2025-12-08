@@ -79,6 +79,7 @@ func contextIterceptor(h controllers.HandlerFunc) http.HandlerFunc {
 		ctx := &context.Context{}
 		ctx.Context = r.Context()
 		ctx.SetValue(context.LogID, id.GenLogID())
+		ctx.SetValue("Host", r.Host)
 		lang := r.Header.Get("Lang")
 		if lang == "" {
 			lang = "en"

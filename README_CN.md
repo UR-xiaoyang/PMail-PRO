@@ -35,6 +35,8 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
 默认情况下，会为web后台也生成ssl证书，让后台使用https访问，如果你有自己的网关层，不需要https的话，在配置文件中将 `httpsEnabled`
 设置为 `2`，这样管理后台就不会使用https协议。（ 注意：即使你不需要https，也请保证ssl证书文件路径正确，http协议虽然不使用证书了，但是smtp协议还需要证书）
 
+如果你完全不需要SSL（例如在内网环境使用），可以将 `sslType` 设置为 `3`。此时所有服务（Web、SMTP、IMAP、POP3）都将以非加密模式运行，SMTPS/IMAPS/POP3S 端口将不会启动。请注意，这会导致密码和邮件内容明文传输，极不安全，仅建议在受信任的网络环境中使用。
+
 ### 5、邮件客户端支持
 
 只要支持pop3、smtp、imap协议的邮件客户端均可使用
@@ -86,7 +88,7 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
   "domain": "domain.com", // 你的域名
   "webDomain": "mail.domain.com", // web域名
   "dkimPrivateKeyPath": "config/dkim/dkim.priv", // dkim 私钥地址
-  "sslType": "0", // ssl证书更新模式，0自动，HTTP模式，1手动、2自动，DNS模式
+  "sslType": "0", // ssl证书更新模式，0自动(HTTP模式)，1手动，2自动(DNS模式)，3不启用SSL
   "SSLPrivateKeyPath": "config/ssl/private.key", // ssl 证书地址
   "SSLPublicKeyPath": "config/ssl/public.crt", // ssl 证书地址
   "dbDSN": "./config/pmail.db", // 数据库连接DSN

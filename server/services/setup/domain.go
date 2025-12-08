@@ -6,6 +6,7 @@ import (
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/utils/array"
 	"github.com/Jinnrry/pmail/utils/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 func GetDomainSettings() (string, string, []string, int, int, int, int, int, int, int, int, error) {
@@ -74,6 +75,8 @@ func SetDomainSettings(smtpDomain, webDomain, multiDomains string, smtpPort, ima
 	if !array.InArray(smtpDomain, configData.Domains) {
 		configData.Domains = append(configData.Domains, smtpDomain)
 	}
+
+	log.Infof("SetDomainSettings: Domains to write: %v", configData.Domains)
 
 	configData.Domain = smtpDomain
 	configData.WebDomain = webDomain

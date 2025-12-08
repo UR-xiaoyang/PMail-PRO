@@ -79,6 +79,7 @@ let lang = {
     "challenge_typ_desc": "If PMail uses port 80 directly, it is recommended that you use the HTTP challenge method.",
     "oomain_service_provider": "Domain Name Service Provider",
     "ssl_manuallyf": "Manually configure an SSL certificate",
+    "ssl_none": "Don't use SSL certificates",
     "ssl_key_path": "ssl key file path",
     "ssl_crt_path": "ssl crt file path",
     "group_settings": "Group",
@@ -109,6 +110,11 @@ let lang = {
     "rule_params": "Executed params",
     "autoSSLWarn": "PMail is not currently running on port 80. If you want PMail to manage SSL certificates automatically, please forward the /.well-known/* route to PMail. See https://github.com/Jinnrry/PMail/issues/94 for details.",
     "err_db_dsn_empty": "Database path cannot be empty!",
+    "finish": "Finish",
+    "congratulations": "Congratulations",
+    "config_complete": "Configuration is complete!",
+    "enter_mailbox": "Enter Mailbox",
+    "noSSLWarn": "Warning: Without SSL, your password and emails will be transmitted in clear text, which is very dangerous. HTTPS, SMTPS, IMAPS, and POP3S services will not be started."
 };
 
 
@@ -190,6 +196,7 @@ const zhCN = {
     "ssl_auto_dns": "DNS记录",
     "ssl_challenge_type": "验证方式",
     "ssl_manuallyf": "手动配置SSL证书",
+    "ssl_none": "不使用SSL证书",
     "challenge_typ_desc": "如果PMail直接使用80端口，建议使用HTTP验证方式。",
     "wait_desc": "请稍等",
     "dns_challenge_wait": "DNS传播和缓存刷新时间较长，此处可能等待10-30分钟",
@@ -223,6 +230,11 @@ const zhCN = {
     "rule_params": "执行参数",
     "autoSSLWarn": "PMail当前未使用80端口启动，如果想要PMail自动管理SSL证书，请将/.well-known/*路由转发到PMail。 详见https://github.com/Jinnrry/PMail/issues/94",
     "err_db_dsn_empty": "数据库路径不能为空!",
+    "finish": "完成",
+    "congratulations": "恭喜",
+    "config_complete": "配置已完成！",
+    "enter_mailbox": "进入邮箱",
+    "noSSLWarn": "警告：不启用SSL将导致您的密码和邮件内容以明文传输，这非常危险。HTTPS、SMTPS、IMAPS和POP3S服务将不会启动。"
 }
 
 if (navigator.language === "zh-CN" || navigator.language === "zh") lang = zhCN

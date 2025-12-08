@@ -30,6 +30,8 @@ beautiful and cute Logo for this project!
 > service will not use https.
 > (Note: Even if you don't need https, please make sure the path to the ssl certificate file is correct, although the web
 > service doesn't use the certificate anymore, the smtp protocol still needs the certificate)
+> 
+> If you do not need SSL at all (e.g. in an intranet environment), you can set `sslType` to `3`. In this case, all services (Web, SMTP, IMAP, POP3) will run in unencrypted mode, and SMTPS/IMAPS/POP3S ports will not start. Please note that this will cause passwords and email content to be transmitted in clear text, which is extremely insecure and is only recommended for use in trusted network environments.
 
 * Support pop3, smtp protocol, you can use any mail client you like.
 * Support multi-domain, multi-user and complete support for sending and receiving e-mail.
@@ -81,7 +83,7 @@ use [https://www.mail-tester.com/](https://www.mail-tester.com/) for checking.
   "domain": "domain.com", // Your domain
   "webDomain": "mail.domain.com", // web domain
   "dkimPrivateKeyPath": "config/dkim/dkim.priv", // dkim key path
-  "sslType": "0", // ssl certificate update mode, 0 automatic, 1 manual
+  "sslType": "0", // ssl certificate update mode, 0 automatic(HTTP), 1 manual, 2 automatic(DNS), 3 disable SSL
   "SSLPrivateKeyPath": "config/ssl/private.key", // ssl certificate path
   "SSLPublicKeyPath": "config/ssl/public.crt", // ssl certificate path
   "dbDSN": "./config/pmail.db", // database connect DSN

@@ -41,7 +41,7 @@ const onSubmit = () => {
     } else {
       Object.assign(globalStatus.userInfos , res.data) 
       router.replace({
-        path: '/',
+        path: '/list',
         query: {
           redirect: router.currentRoute.fullPath
         }

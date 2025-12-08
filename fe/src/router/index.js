@@ -4,6 +4,7 @@ import EditerView from '../views/EditerView.vue'
 import LoginView from '../views/LoginView.vue'
 import EmailDetailView from '../views/EmailDetailView.vue'
 import SetupView from '../views/SetupView.vue'
+import WelcomeView from '../views/WelcomeView.vue'
 
 
 const router = createRouter({
@@ -11,8 +12,8 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: ListView
+      name: 'welcome',
+      component: WelcomeView
     },
     {
       path: '/list',

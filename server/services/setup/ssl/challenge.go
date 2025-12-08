@@ -1,10 +1,12 @@
 package ssl
 
 import (
+	"sync"
+	"time"
+
 	"github.com/Jinnrry/pmail/utils/context"
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	log "github.com/sirupsen/logrus"
-	"time"
 )
 
 type authInfo struct {
@@ -15,11 +17,17 @@ type authInfo struct {
 
 type HttpChallenge struct {
 	AuthInfo map[string]*authInfo
+	mu       sync.RWMutex
 }
 
-var instance *HttpChallenge
+var (
+	instance *HttpChallenge
+	once     sync.Once
+)
 
 func (h *HttpChallenge) Present(domain, token, keyAuth string) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
 	h.AuthInfo[token] = &authInfo{
 		Domain:  domain,
 		Token:   token,
@@ -30,16 +38,25 @@ func (h *HttpChallenge) Present(domain, token, keyAuth string) error {
 }
 
 func (h *HttpChallenge) CleanUp(domain, token, keyAuth string) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
 	delete(h.AuthInfo, token)
 	return nil
 }
 
+func (h *HttpChallenge) GetAuth(token string) (*authInfo, bool) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	info, ok := h.AuthInfo[token]
+	return info, ok
+}
+
 func GetHttpChallengeInstance() *HttpChallenge {
-	if instance == nil {
+	once.Do(func() {
 		instance = &HttpChallenge{
 			AuthInfo: map[string]*authInfo{},
 		}
-	}
+	})
 	return instance
 }
 
