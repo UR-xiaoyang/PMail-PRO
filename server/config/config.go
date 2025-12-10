@@ -127,6 +127,20 @@ func Init() {
 			return
 		}
 
+		// Override with environment variables
+		if dbDSN := os.Getenv("PMAIL_DB_DSN"); dbDSN != "" {
+			Instance.DbDSN = dbDSN
+		}
+		if dbType := os.Getenv("PMAIL_DB_TYPE"); dbType != "" {
+			Instance.DbType = dbType
+		}
+		if domain := os.Getenv("PMAIL_DOMAIN"); domain != "" {
+			Instance.Domain = domain
+		}
+		if webDomain := os.Getenv("PMAIL_WEB_DOMAIN"); webDomain != "" {
+			Instance.WebDomain = webDomain
+		}
+
 		if len(Instance.Domains) == 0 && Instance.Domain != "" {
 			Instance.Domains = []string{Instance.Domain}
 		}

@@ -75,21 +75,21 @@ const goToEditer = () => {
   padding: 10px;
 }
 
-.custom-tree >>> .el-tree-node__content {
+.custom-tree :deep(.el-tree-node__content) {
   height: 36px;
   line-height: 36px;
   border-radius: 4px;
 }
 
-.custom-tree >>> .el-tree-node__content:hover {
+.custom-tree :deep(.el-tree-node__content:hover) {
   background-color: #ecf5ff;
 }
 
-.custom-tree >>> .el-tree-node:focus > .el-tree-node__content {
+.custom-tree :deep(.el-tree-node:focus > .el-tree-node__content) {
   background-color: #d9ecff;
 }
 
-.custom-tree >>> .el-tree-node.is-current > .el-tree-node__content {
+.custom-tree :deep(.el-tree-node.is-current > .el-tree-node__content) {
   background-color: #d9ecff;
   color: #409eff;
   font-weight: bold;

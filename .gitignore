@@ -10,3 +10,8 @@ pmail
 *.exe
 .vscode
 release
+server/config/config.json
+server/config/dkim/*.priv
+server/config/ssl/*.key
+server/config/pmail.db
+server/config/pmail_temp.db

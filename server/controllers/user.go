@@ -2,6 +2,10 @@ package controllers
 
 import (
 	"encoding/json"
+	"io"
+	"math"
+	"net/http"
+
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/db"
 	"github.com/Jinnrry/pmail/dto/response"
@@ -11,9 +15,6 @@ import (
 	"github.com/Jinnrry/pmail/utils/password"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
-	"io"
-	"math"
-	"net/http"
 )
 
 type userCreateRequest struct {
@@ -48,7 +49,11 @@ func CreateUser(ctx *context.Context, w http.ResponseWriter, req *http.Request) 
 
 	var user models.User
 	user.Name = reqData.Username
-	user.Password = password.Encode(reqData.Password)
+	user.Password, err = password.Hash(reqData.Password)
+	if err != nil {
+		response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
+		return
+	}
 	user.Account = reqData.Account
 
 	_, err = db.Instance.Insert(&user)
@@ -164,7 +169,12 @@ func EditUser(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		user.Disabled = reqData.Disabled
 	}
 	if reqData.Password != "" {
-		user.Password = password.Encode(reqData.Password)
+		newHash, err := password.Hash(reqData.Password)
+		if err != nil {
+			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
+			return
+		}
+		user.Password = newHash
 	}
 
 	num, err := db.Instance.ID(user.ID).Cols("name", "password", "disabled").Update(&user)

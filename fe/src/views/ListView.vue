@@ -92,7 +92,7 @@
 <script setup>
 
 import {EpArrowDownBold} from "vue-icons-plus/ep";
-import {RouterLink, useRouter} from 'vue-router'
+import {useRouter} from 'vue-router'
 import {ref, watch} from 'vue'
 import useGroupStore from '../stores/group'
 import lang from '../i18n/i18n';

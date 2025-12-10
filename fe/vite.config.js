@@ -53,6 +53,22 @@ export default defineConfig({
   },
   build: {
     outDir: '../server/listen/http_server/dist',
-    emptyOutDir: true
+    emptyOutDir: true,
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('element-plus')) {
+              return 'element-plus';
+            }
+            if (id.includes('@wangeditor')) {
+              return 'wangeditor';
+            }
+            return 'vendor';
+          }
+        }
+      }
+    }
   }
 })

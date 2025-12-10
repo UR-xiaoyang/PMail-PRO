@@ -71,19 +71,28 @@ func (s *Session) AuthPlain(username, pwd string) error {
 
 	var user models.User
 
-	encodePwd := password.Encode(pwd)
-
 	infos := strings.Split(username, "@")
 	if len(infos) > 1 {
 		username = infos[0]
 	}
 
-	_, err := db.Instance.Where("account =? and password =? and disabled=0", username, encodePwd).Get(&user)
+	// 1. Get user by account first
+	_, err := db.Instance.Where("account =? and disabled=0", username).Get(&user)
 	if err != nil && err != sql.ErrNoRows {
 		log.Errorf("%+v", err)
 	}
 
-	if user.ID > 0 {
+	// 2. Verify password
+	if user.ID > 0 && password.Verify(pwd, user.Password) {
+		// Optional: Upgrade to Bcrypt if legacy
+		if len(user.Password) == 32 {
+			newHash, err := password.Hash(pwd)
+			if err == nil {
+				user.Password = newHash
+				db.Instance.ID(user.ID).Cols("password").Update(&user)
+			}
+		}
+
 		s.Ctx.UserAccount = user.Account
 		s.Ctx.UserID = user.ID
 		s.Ctx.UserName = user.Name

@@ -1,6 +1,5 @@
 import axios from 'axios'
 import lang from '../i18n/i18n';
-import {useGlobalStatusStore} from "@/stores/useGlobalStatusStore";
 import {router} from "@/router";
 
 //创建axios的一个实例

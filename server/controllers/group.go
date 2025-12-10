@@ -2,6 +2,9 @@ package controllers
 
 import (
 	"encoding/json"
+	"io"
+	"net/http"
+
 	"github.com/Jinnrry/pmail/dto"
 	"github.com/Jinnrry/pmail/dto/response"
 	"github.com/Jinnrry/pmail/i18n"
@@ -10,15 +13,13 @@ import (
 	"github.com/Jinnrry/pmail/utils/array"
 	"github.com/Jinnrry/pmail/utils/context"
 	log "github.com/sirupsen/logrus"
-	"io"
-	"net/http"
 )
 
 func GetUserGroupList(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	defaultGroup := []*models.Group{
-		{models.INBOX, i18n.GetText(ctx.Lang, "inbox"), 0, 0, "/"},
-		{models.Junk, i18n.GetText(ctx.Lang, "junk"), 0, 0, "/"},
-		{models.Deleted, i18n.GetText(ctx.Lang, "deleted"), 0, 0, "/"},
+		{ID: models.INBOX, Name: i18n.GetText(ctx.Lang, "inbox"), ParentId: 0, UserId: 0, FullPath: "/"},
+		{ID: models.Junk, Name: i18n.GetText(ctx.Lang, "junk"), ParentId: 0, UserId: 0, FullPath: "/"},
+		{ID: models.Deleted, Name: i18n.GetText(ctx.Lang, "deleted"), ParentId: 0, UserId: 0, FullPath: "/"},
 	}
 
 	infos := group.GetGroupList(ctx)

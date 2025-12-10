@@ -3,6 +3,9 @@ package controllers
 import (
 	"database/sql"
 	"encoding/json"
+	"io"
+	"net/http"
+
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/db"
 	"github.com/Jinnrry/pmail/dto/response"
@@ -14,8 +17,6 @@ import (
 	"github.com/Jinnrry/pmail/utils/errors"
 	"github.com/Jinnrry/pmail/utils/password"
 	log "github.com/sirupsen/logrus"
-	"io"
-	"net/http"
 )
 
 type loginRequest struct {
@@ -37,13 +38,28 @@ func Login(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 
 	var user models.User
 
-	encodePwd := password.Encode(reqData.Password)
-	_, err = db.Instance.Where("account =? and password =? and disabled=0", reqData.Account, encodePwd).Get(&user)
+	// 1. Get user by account first
+	_, err = db.Instance.Where("account =? and disabled=0", reqData.Account).Get(&user)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		log.Errorf("%+v", err)
 	}
 
-	if user.ID != 0 {
+	// Prevent timing attacks: simulate work if user not found
+	if user.ID == 0 {
+		_, _ = password.Hash(reqData.Password)
+	}
+
+	// 2. Verify password
+	if user.ID != 0 && password.Verify(reqData.Password, user.Password) {
+		// Optional: Upgrade to Bcrypt if legacy
+		if len(user.Password) == 32 {
+			newHash, err := password.Hash(reqData.Password)
+			if err == nil {
+				user.Password = newHash
+				db.Instance.ID(user.ID).Cols("password").Update(&user)
+			}
+		}
+
 		userStr, _ := json.Marshal(user)
 		session.Instance.Put(req.Context(), "user", string(userStr))
 

@@ -28,9 +28,14 @@ func ModifyPassword(ctx *context.Context, w http.ResponseWriter, req *http.Reque
 	}
 
 	if retData.Password != "" {
-		encodePwd := password.Encode(retData.Password)
+		newHash, err := password.Hash(retData.Password)
+		if err != nil {
+			log.Errorf("Password hash error: %+v", err)
+			response.NewErrorResponse(response.ServerError, i18n.GetText(ctx.Lang, "unknowError"), "").FPrint(w)
+			return
+		}
 
-		_, err := db.Instance.Exec(db.WithContext(ctx, "update user set password = ? where id =?"), encodePwd, ctx.UserID)
+		_, err = db.Instance.Exec(db.WithContext(ctx, "update user set password = ? where id =?"), newHash, ctx.UserID)
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, i18n.GetText(ctx.Lang, "unknowError"), "").FPrint(w)
 			return

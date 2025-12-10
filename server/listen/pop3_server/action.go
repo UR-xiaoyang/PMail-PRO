@@ -106,16 +106,24 @@ func (a action) Pass(session *gopop.Session, pwd string) error {
 
 	var user models.User
 
-	encodePwd := password.Encode(pwd)
-
-	_, err := db.Instance.Where("account =? and password =? and disabled = 0", session.User, encodePwd).Get(&user)
+	// 1. Get user by account first
+	_, err := db.Instance.Where("account =? and disabled = 0", session.User).Get(&user)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		log.WithContext(session.Ctx.(*context.Context)).Errorf("%+v", err)
 	}
 
-	if user.ID > 0 {
-		session.Status = gopop.TRANSACTION
+	// 2. Verify password
+	if user.ID > 0 && password.Verify(pwd, user.Password) {
+		// Optional: Upgrade to Bcrypt if legacy
+		if len(user.Password) == 32 {
+			newHash, err := password.Hash(pwd)
+			if err == nil {
+				user.Password = newHash
+				db.Instance.ID(user.ID).Cols("password").Update(&user)
+			}
+		}
 
+		session.Status = gopop.TRANSACTION
 		session.Ctx.(*context.Context).UserID = user.ID
 		session.Ctx.(*context.Context).UserName = user.Name
 		session.Ctx.(*context.Context).UserAccount = user.Account

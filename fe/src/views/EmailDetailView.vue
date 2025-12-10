@@ -5,7 +5,7 @@ r<template>
       <div class="info">
         <div>{{ lang.sender }}：
           <el-tag size="small" type="info">
-            {{ detailData.from_name }} <{{ detailData.from_address }}>
+            {{ detailData.from_name }} &lt;{{ detailData.from_address }}&gt;
           </el-tag>
         </div>
         <div>{{ lang.to }}：

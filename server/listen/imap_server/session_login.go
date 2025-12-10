@@ -19,16 +19,24 @@ func (s *serverSession) Login(username, pwd string) error {
 
 	var user models.User
 
-	encodePwd := password.Encode(pwd)
-
-	_, err := db.Instance.Where("account =? and password =? and disabled = 0", username, encodePwd).Get(&user)
+	// 1. Get user by account first
+	_, err := db.Instance.Where("account =? and disabled = 0", username).Get(&user)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		log.WithContext(s.ctx).Errorf("%+v", err)
 	}
 
-	if user.ID > 0 {
-		s.status = AUTHORIZED
+	// 2. Verify password
+	if user.ID > 0 && password.Verify(pwd, user.Password) {
+		// Optional: Upgrade to Bcrypt if legacy
+		if len(user.Password) == 32 {
+			newHash, err := password.Hash(pwd)
+			if err == nil {
+				user.Password = newHash
+				db.Instance.ID(user.ID).Cols("password").Update(&user)
+			}
+		}
 
+		s.status = AUTHORIZED
 		s.ctx.UserID = user.ID
 		s.ctx.UserName = user.Name
 		s.ctx.UserAccount = user.Account

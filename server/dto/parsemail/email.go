@@ -5,6 +5,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
+	"mime"
+	"net/textproto"
+	"regexp"
+	"strings"
+	"time"
+
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/models"
 	"github.com/Jinnrry/pmail/utils/context"
@@ -14,12 +21,6 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
-	"io"
-	"mime"
-	"net/textproto"
-	"regexp"
-	"strings"
-	"time"
 )
 
 type User struct {
@@ -380,7 +381,7 @@ func buildUsers(strs []string) []*User {
 func (e *Email) ForwardBuildBytes(ctx *context.Context, sender *models.User) []byte {
 	var b bytes.Buffer
 
-	from := []*mail.Address{{e.From.Name, e.From.EmailAddress}}
+	from := []*mail.Address{{Name: e.From.Name, Address: e.From.EmailAddress}}
 	to := []*mail.Address{}
 	for _, user := range e.To {
 		to = append(to, &mail.Address{
@@ -389,7 +390,7 @@ func (e *Email) ForwardBuildBytes(ctx *context.Context, sender *models.User) []b
 		})
 	}
 
-	senderAddress := []*mail.Address{{sender.Name, fmt.Sprintf("%s@%s", sender.Account, config.Instance.Domains[0])}}
+	senderAddress := []*mail.Address{{Name: sender.Name, Address: fmt.Sprintf("%s@%s", sender.Account, config.Instance.Domains[0])}}
 	// Create our mail header
 	var h mail.Header
 	h.SetDate(time.Now())
@@ -490,7 +491,7 @@ func (e *Email) BuildPart(ctx *context.Context, loc []int) []byte {
 func (e *Email) BuildBytes(ctx *context.Context, dkim bool) []byte {
 	var b bytes.Buffer
 
-	from := []*mail.Address{{e.From.Name, e.From.EmailAddress}}
+	from := []*mail.Address{{Name: e.From.Name, Address: e.From.EmailAddress}}
 	to := []*mail.Address{}
 	for _, user := range e.To {
 		to = append(to, &mail.Address{
