@@ -36,6 +36,65 @@ type sslResponse struct {
 }
 
 func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
+	if strings.Contains(req.Header.Get("Content-Type"), "multipart/form-data") {
+		err := req.ParseMultipartForm(32 << 20)
+		if err != nil {
+			response.NewErrorResponse(response.ServerError, "", err.Error()).FPrint(w)
+			return
+		}
+
+		if req.FormValue("step") == "ssl" && req.FormValue("action") == "set" {
+			if req.FormValue("ssl_type") == config.SSLTypeUser {
+				// Save key file
+				keyFile, _, err := req.FormFile("key_file")
+				if err != nil {
+					response.NewErrorResponse(response.ServerError, "Key file missing", err.Error()).FPrint(w)
+					return
+				}
+				defer keyFile.Close()
+
+				os.MkdirAll("./config/ssl", 0755)
+				outKey, err := os.Create("./config/ssl/custom.key")
+				if err != nil {
+					response.NewErrorResponse(response.ServerError, "Create key file failed", err.Error()).FPrint(w)
+					return
+				}
+				defer outKey.Close()
+				io.Copy(outKey, keyFile)
+
+				// Save crt file
+				crtFile, _, err := req.FormFile("crt_file")
+				if err != nil {
+					response.NewErrorResponse(response.ServerError, "Crt file missing", err.Error()).FPrint(w)
+					return
+				}
+				defer crtFile.Close()
+
+				outCrt, err := os.Create("./config/ssl/custom.crt")
+				if err != nil {
+					response.NewErrorResponse(response.ServerError, "Create crt file failed", err.Error()).FPrint(w)
+					return
+				}
+				defer outCrt.Close()
+				io.Copy(outCrt, crtFile)
+
+				err = ssl.SetSSL(config.SSLTypeUser, "./config/ssl/custom.key", "./config/ssl/custom.crt")
+				if err != nil {
+					response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
+					return
+				}
+
+				go func() {
+					time.Sleep(time.Second)
+					setup.Finish()
+				}()
+
+				response.NewSuccessResponse("Succ").FPrint(w)
+				return
+			}
+		}
+	}
+
 	reqBytes, err := io.ReadAll(req.Body)
 	if err != nil {
 		response.NewSuccessResponse("").FPrint(w)
@@ -190,12 +249,19 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		if cast.ToString(reqData["ssl_type"]) == config.SSLTypeAutoHTTP || cast.ToString(reqData["ssl_type"]) == config.SSLTypeAutoDNS {
+		if cast.ToString(reqData["ssl_type"]) == config.SSLTypeAutoHTTP {
 			err = ssl.GenSSL(false)
 			if err != nil {
 				response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
 				return
 			}
+		} else if cast.ToString(reqData["ssl_type"]) == config.SSLTypeAutoDNS {
+			go func() {
+				err := ssl.GenSSL(false)
+				if err != nil {
+					log.Errorf("SSL GenSSL Error: %v", err)
+				}
+			}()
 		} else {
 			go func() {
 				time.Sleep(time.Second)

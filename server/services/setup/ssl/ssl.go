@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/tls"
 	"crypto/x509"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -92,6 +93,9 @@ func renewCertificate(privateKey *ecdsa.PrivateKey, cfg *config.Config) error {
 	conf := lego.NewConfig(&myUser)
 	conf.UserAgent = "PMail"
 	conf.Certificate.KeyType = certcrypto.RSA2048
+	conf.HTTPClient = &http.Client{
+		Timeout: 30 * time.Second,
+	}
 
 	// A client facilitates communication with the CA server.
 	client, err := lego.NewClient(conf)
@@ -105,7 +109,7 @@ func renewCertificate(privateKey *ecdsa.PrivateKey, cfg *config.Config) error {
 			return errors.Wrap(err)
 		}
 	} else if cfg.SSLType == config.SSLTypeAutoDNS {
-		err = client.Challenge.SetDNS01Provider(GetDnsChallengeInstance(), dns01.AddDNSTimeout(60*time.Minute))
+		err = client.Challenge.SetDNS01Provider(GetDnsChallengeInstance(), dns01.AddDNSTimeout(10*time.Minute))
 		if err != nil {
 			return errors.Wrap(err)
 		}
@@ -128,9 +132,14 @@ func renewCertificate(privateKey *ecdsa.PrivateKey, cfg *config.Config) error {
 
 	domains := []string{cfg.WebDomain}
 	for _, domain := range cfg.Domains {
-		domains = append(domains, "smtp."+domain)
-		domains = append(domains, "pop."+domain)
-		domains = append(domains, "imap."+domain)
+		if cfg.SSLType == config.SSLTypeAutoDNS {
+			domains = append(domains, "*."+domain)
+			domains = append(domains, domain)
+		} else {
+			domains = append(domains, "smtp."+domain)
+			domains = append(domains, "pop."+domain)
+			domains = append(domains, "imap."+domain)
+		}
 	}
 
 	request := certificate.ObtainRequest{
@@ -171,6 +180,9 @@ func generateCertificate(privateKey *ecdsa.PrivateKey, cfg *config.Config, newAc
 	conf := lego.NewConfig(&myUser)
 	conf.UserAgent = "PMail"
 	conf.Certificate.KeyType = certcrypto.RSA2048
+	conf.HTTPClient = &http.Client{
+		Timeout: 30 * time.Second,
+	}
 
 	// A client facilitates communication with the CA server.
 	client, err := lego.NewClient(conf)
@@ -184,7 +196,7 @@ func generateCertificate(privateKey *ecdsa.PrivateKey, cfg *config.Config, newAc
 			return errors.Wrap(err)
 		}
 	} else if cfg.SSLType == config.SSLTypeAutoDNS {
-		err = client.Challenge.SetDNS01Provider(GetDnsChallengeInstance(), dns01.AddDNSTimeout(60*time.Minute))
+		err = client.Challenge.SetDNS01Provider(GetDnsChallengeInstance(), dns01.AddDNSTimeout(10*time.Minute))
 		if err != nil {
 			return errors.Wrap(err)
 		}
@@ -208,9 +220,14 @@ func generateCertificate(privateKey *ecdsa.PrivateKey, cfg *config.Config, newAc
 
 	domains := []string{cfg.WebDomain}
 	for _, domain := range cfg.Domains {
-		domains = append(domains, "smtp."+domain)
-		domains = append(domains, "pop."+domain)
-		domains = append(domains, "imap."+domain)
+		if cfg.SSLType == config.SSLTypeAutoDNS {
+			domains = append(domains, "*."+domain)
+			domains = append(domains, domain)
+		} else {
+			domains = append(domains, "smtp."+domain)
+			domains = append(domains, "pop."+domain)
+			domains = append(domains, "imap."+domain)
+		}
 	}
 
 	request := certificate.ObtainRequest{

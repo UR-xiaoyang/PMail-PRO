@@ -93,7 +93,7 @@ func (h *DNSChallenge) CleanUp(domain, token, keyAuth string) error {
 }
 
 func (h *DNSChallenge) Timeout() (timeout, interval time.Duration) {
-	return 60 * time.Minute, 5 * time.Second
+	return 10 * time.Minute, 5 * time.Second
 }
 
 type DNSItem struct {

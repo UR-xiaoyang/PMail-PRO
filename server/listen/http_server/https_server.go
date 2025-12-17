@@ -15,6 +15,7 @@ import (
 	"github.com/Jinnrry/pmail/models"
 	"github.com/Jinnrry/pmail/session"
 	"github.com/Jinnrry/pmail/utils/context"
+	"github.com/Jinnrry/pmail/utils/file"
 	"github.com/Jinnrry/pmail/utils/id"
 
 	log "github.com/sirupsen/logrus"
@@ -48,6 +49,10 @@ func HttpsStart() {
 	}
 
 	if config.Instance.HttpsEnabled != 2 {
+		if !file.PathExist(config.Instance.SSLPublicKeyPath) || !file.PathExist(config.Instance.SSLPrivateKeyPath) {
+			log.Errorf("SSL Certificate Not Found, Https Server Start Failed!")
+			return
+		}
 		log.Infof("Https Server Start On Port :%d", HttpsPort)
 		httpsServer = &http.Server{
 			Addr:         fmt.Sprintf(":%d", HttpsPort),

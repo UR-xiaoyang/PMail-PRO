@@ -44,6 +44,7 @@ declare module 'vue' {
     ElTag: typeof import('element-plus/es')['ElTag']
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     ElTree: typeof import('element-plus/es')['ElTree']
+    ElUpload: typeof import('element-plus/es')['ElUpload']
     GroupSettings: typeof import('./src/components/GroupSettings.vue')['default']
     HomeAside: typeof import('./src/components/HomeAside.vue')['default']
     HomeHeader: typeof import('./src/components/HomeHeader.vue')['default']

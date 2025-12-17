@@ -15,7 +15,7 @@ const http = axios.create({
 //请求拦截器
 http.interceptors.request.use((config) => {
     //若请求方式为post，则将data参数转为JSON字符串
-    if (config.method === 'POST') {
+    if (config.method === 'POST' && !(config.data instanceof FormData)) {
         config.data = JSON.stringify(config.data);
     }
     return config;

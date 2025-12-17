@@ -3,14 +3,16 @@ package http_server
 import (
 	"errors"
 	"fmt"
+	"io/fs"
+	"net/http"
+	"time"
+
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/controllers"
 	"github.com/Jinnrry/pmail/controllers/email"
 	"github.com/Jinnrry/pmail/session"
+	"github.com/Jinnrry/pmail/utils/file"
 	log "github.com/sirupsen/logrus"
-	"io/fs"
-	"net/http"
-	"time"
 )
 
 // 这个服务是为了拦截http请求转发到https
@@ -66,8 +68,11 @@ func HttpStart() {
 		HttpPort = config.Instance.HttpPort
 	}
 
-	if config.Instance.HttpsEnabled != 2 {
+	sslExist := file.PathExist(config.Instance.SSLPublicKeyPath) && file.PathExist(config.Instance.SSLPrivateKeyPath)
+
+	if config.Instance.HttpsEnabled != 2 && sslExist {
 		mux.HandleFunc("/api/ping", controllers.Ping)
+		mux.HandleFunc("/.well-known/", controllers.AcmeChallenge)
 		mux.HandleFunc("/", controllers.Interceptor)
 		httpServer = &http.Server{
 			Addr:         fmt.Sprintf(":%d", HttpPort),

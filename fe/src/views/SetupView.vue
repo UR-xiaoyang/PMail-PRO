@@ -221,11 +221,31 @@
                   </el-form-item>
 
                   <el-form-item :label="lang.ssl_key_path" v-if="sslSettings.type === '1'">
-                    <el-input placeholder="./config/ssl/private.key" v-model="sslSettings.key_path"></el-input>
+                    <el-upload
+                        class="upload-demo"
+                        action=""
+                        :auto-upload="false"
+                        :on-change="handleKeyChange"
+                        :limit="1"
+                        :file-list="keyFileList"
+                        accept=".key,.pem"
+                        >
+                        <el-button type="primary">Select Key File</el-button>
+                    </el-upload>
                   </el-form-item>
 
                   <el-form-item :label="lang.ssl_crt_path" v-if="sslSettings.type === '1'">
-                    <el-input placeholder="./config/ssl/public.crt" v-model="sslSettings.crt_path"></el-input>
+                    <el-upload
+                        class="upload-demo"
+                        action=""
+                        :auto-upload="false"
+                        :on-change="handleCrtChange"
+                        :limit="1"
+                        :file-list="crtFileList"
+                        accept=".crt,.pem,.cer"
+                        >
+                        <el-button type="primary">Select Crt File</el-button>
+                    </el-upload>
                   </el-form-item>
                 </el-form>
               </div>
@@ -499,12 +519,49 @@ const getSSLConfig = () => {
 }
 
 
+const keyFileList = ref([])
+const crtFileList = ref([])
+
+const handleKeyChange = (file) => {
+    keyFileList.value = [file]
+}
+
+const handleCrtChange = (file) => {
+    crtFileList.value = [file]
+}
+
 const setSSLConfig = () => {
   fullscreenLoading.value = true;
 
   let sslType = sslSettings.type;
   if (sslType === "0" && sslSettings.challenge === "dns") {
     sslType = "2"
+  }
+
+  if (sslType === "1") {
+      // Manual upload
+      if (keyFileList.value.length === 0 || crtFileList.value.length === 0) {
+          fullscreenLoading.value = false;
+          ElMessage.error("Please select both key and crt files")
+          return
+      }
+      
+      const formData = new FormData()
+      formData.append("action", "set")
+      formData.append("step", "ssl")
+      formData.append("ssl_type", "1")
+      formData.append("key_file", keyFileList.value[0].raw)
+      formData.append("crt_file", crtFileList.value[0].raw)
+      
+      http.post("/api/setup", formData).then((res) => {
+        if (res.errorNo !== 0) {
+            fullscreenLoading.value = false;
+            ElMessage.error(res.errorMsg)
+        } else {
+             checkStatus();
+        }
+      })
+      return
   }
 
 
@@ -519,7 +576,7 @@ const setSSLConfig = () => {
       fullscreenLoading.value = false;
       ElMessage.error(res.errorMsg)
     } else {
-      if (sslType === 2) {
+      if (sslType == 2) {
         fullscreenLoading.value = false;
         dnsChecking.value = true;
         getSSLDNSParams();
