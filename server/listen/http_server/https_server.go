@@ -3,6 +3,7 @@ package http_server
 import (
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	olog "log"
 	"net/http"
@@ -62,7 +63,7 @@ func HttpsStart() {
 			ErrorLog:     nullLog,
 		}
 		err := httpsServer.ListenAndServeTLS(config.Instance.SSLPublicKeyPath, config.Instance.SSLPrivateKeyPath)
-		if err != nil {
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			panic(err)
 		}
 	}
@@ -70,7 +71,8 @@ func HttpsStart() {
 
 func HttpsStop() {
 	if httpsServer != nil {
-		httpsServer.Close()
+		_ = httpsServer.Close()
+		httpsServer = nil
 	}
 }
 

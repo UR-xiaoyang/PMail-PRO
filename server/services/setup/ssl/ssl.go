@@ -31,6 +31,8 @@ var (
 	sslGenStatus = "idle"
 	sslGenErr    = ""
 	sslGenLock   sync.Mutex
+
+	ErrSSLGenerationRunning = errors.New("SSL generation is already running")
 )
 
 func GetSSLGenStatus() (string, string) {
@@ -307,7 +309,7 @@ func GenSSL(update bool) error {
 	sslGenLock.Lock()
 	if sslGenStatus == "running" {
 		sslGenLock.Unlock()
-		return errors.New("SSL generation is already running")
+		return ErrSSLGenerationRunning
 	}
 	sslGenStatus = "running"
 	sslGenErr = ""
@@ -390,7 +392,12 @@ func Update(needRestart bool) {
 			}
 			err = GenSSL(true)
 			if err != nil {
-				log.Errorf("SSL Update Error! %+v", err)
+				if errors.Is(err, ErrSSLGenerationRunning) {
+					log.Warnf("SSL Update Skipped! %+v", err)
+				} else {
+					log.Errorf("SSL Update Error! %+v", err)
+				}
+				return
 			}
 			if needRestart {
 				// 更新完证书，重启服务
