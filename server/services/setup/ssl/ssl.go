@@ -20,10 +20,24 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 
+	"sync"
+
 	"github.com/go-acme/lego/v4/certcrypto"
 	"github.com/go-acme/lego/v4/lego"
 	"github.com/go-acme/lego/v4/registration"
 )
+
+var (
+	sslGenStatus = "idle"
+	sslGenErr    = ""
+	sslGenLock   sync.Mutex
+)
+
+func GetSSLGenStatus() (string, string) {
+	sslGenLock.Lock()
+	defer sslGenLock.Unlock()
+	return sslGenStatus, sslGenErr
+}
 
 type MyUser struct {
 	Email        string
@@ -132,14 +146,8 @@ func renewCertificate(privateKey *ecdsa.PrivateKey, cfg *config.Config) error {
 
 	domains := []string{cfg.WebDomain}
 	for _, domain := range cfg.Domains {
-		if cfg.SSLType == config.SSLTypeAutoDNS {
-			domains = append(domains, "*."+domain)
-			domains = append(domains, domain)
-		} else {
-			domains = append(domains, "smtp."+domain)
-			domains = append(domains, "pop."+domain)
-			domains = append(domains, "imap."+domain)
-		}
+		domains = append(domains, "*."+domain)
+		domains = append(domains, domain)
 	}
 
 	request := certificate.ObtainRequest{
@@ -150,21 +158,21 @@ func renewCertificate(privateKey *ecdsa.PrivateKey, cfg *config.Config) error {
 	log.Infof("wait ssl renew")
 	certificates, err := client.Certificate.Obtain(request)
 	if err != nil {
-		panic(err)
+		return errors.Wrap(err)
 	}
 	err = os.WriteFile("./config/ssl/private.key", certificates.PrivateKey, 0666)
 	if err != nil {
-		panic(err)
+		return errors.Wrap(err)
 	}
 
 	err = os.WriteFile("./config/ssl/public.crt", certificates.Certificate, 0666)
 	if err != nil {
-		panic(err)
+		return errors.Wrap(err)
 	}
 
 	err = os.WriteFile("./config/ssl/issuerCert.crt", certificates.IssuerCertificate, 0666)
 	if err != nil {
-		panic(err)
+		return errors.Wrap(err)
 	}
 
 	return nil
@@ -220,14 +228,8 @@ func generateCertificate(privateKey *ecdsa.PrivateKey, cfg *config.Config, newAc
 
 	domains := []string{cfg.WebDomain}
 	for _, domain := range cfg.Domains {
-		if cfg.SSLType == config.SSLTypeAutoDNS {
-			domains = append(domains, "*."+domain)
-			domains = append(domains, domain)
-		} else {
-			domains = append(domains, "smtp."+domain)
-			domains = append(domains, "pop."+domain)
-			domains = append(domains, "imap."+domain)
-		}
+		domains = append(domains, "*."+domain)
+		domains = append(domains, domain)
 	}
 
 	request := certificate.ObtainRequest{
@@ -241,23 +243,48 @@ func generateCertificate(privateKey *ecdsa.PrivateKey, cfg *config.Config, newAc
 		log.Infof("wait ssl")
 		certificates, err := client.Certificate.Obtain(request)
 		if err != nil {
-			panic(err)
+			log.Errorf("SSL Certificate Obtain Error: %v", err)
+			sslGenLock.Lock()
+			sslGenStatus = "error"
+			sslGenErr = err.Error()
+			sslGenLock.Unlock()
+			return
 		}
 		log.Infof("证书校验通过！")
 		err = os.WriteFile("./config/ssl/private.key", certificates.PrivateKey, 0666)
 		if err != nil {
-			panic(err)
+			log.Errorf("Write private.key Error: %v", err)
+			sslGenLock.Lock()
+			sslGenStatus = "error"
+			sslGenErr = err.Error()
+			sslGenLock.Unlock()
+			return
 		}
 
 		err = os.WriteFile("./config/ssl/public.crt", certificates.Certificate, 0666)
 		if err != nil {
-			panic(err)
+			log.Errorf("Write public.crt Error: %v", err)
+			sslGenLock.Lock()
+			sslGenStatus = "error"
+			sslGenErr = err.Error()
+			sslGenLock.Unlock()
+			return
 		}
 
 		err = os.WriteFile("./config/ssl/issuerCert.crt", certificates.IssuerCertificate, 0666)
 		if err != nil {
-			panic(err)
+			log.Errorf("Write issuerCert.crt Error: %v", err)
+			sslGenLock.Lock()
+			sslGenStatus = "error"
+			sslGenErr = err.Error()
+			sslGenLock.Unlock()
+			return
 		}
+
+		sslGenLock.Lock()
+		sslGenStatus = "success"
+		sslGenErr = ""
+		sslGenLock.Unlock()
 
 		setup.Finish()
 
@@ -273,7 +300,19 @@ func GenSSL(update bool) error {
 		panic(err)
 	}
 
+	sslGenLock.Lock()
+	if sslGenStatus == "running" {
+		sslGenLock.Unlock()
+		return errors.New("SSL generation is already running")
+	}
+	sslGenStatus = "running"
+	sslGenErr = ""
+	sslGenLock.Unlock()
+
 	if cfg.SSLType == config.SSLTypeNone {
+		sslGenLock.Lock()
+		sslGenStatus = "success"
+		sslGenLock.Unlock()
 		return nil
 	}
 
@@ -282,6 +321,9 @@ func GenSSL(update bool) error {
 		public, errpu := os.ReadFile(cfg.SSLPublicKeyPath)
 		// 当前存在证书数据，就不生成了
 		if errpi == nil && errpu == nil && len(privateFile) > 0 && len(public) > 0 {
+			sslGenLock.Lock()
+			sslGenStatus = "success"
+			sslGenLock.Unlock()
 			return nil
 		}
 	}

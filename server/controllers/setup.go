@@ -224,6 +224,15 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if cast.ToString(reqData["step"]) == "ssl" && cast.ToString(reqData["action"]) == "check_ssl" {
+		status, errStr := ssl.GetSSLGenStatus()
+		response.NewSuccessResponse(map[string]string{
+			"status": status,
+			"error":  errStr,
+		}).FPrint(w)
+		return
+	}
+
 	if cast.ToString(reqData["step"]) == "ssl" && cast.ToString(reqData["action"]) == "set" {
 
 		if cast.ToString(reqData["ssl_type"]) == config.SSLTypeUser {

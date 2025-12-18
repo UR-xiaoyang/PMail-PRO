@@ -291,7 +291,7 @@
             :loading="fullscreenLoading"
             class="next-btn"
             @click="next">
-            {{ lang.next }}
+            {{ (active === 5 && dnsChecking) ? lang.check : lang.next }}
             <el-icon class="el-icon--right"><ArrowRight /></el-icon>
         </el-button>
          <el-button 
@@ -580,8 +580,27 @@ const setSSLConfig = () => {
         fullscreenLoading.value = false;
         dnsChecking.value = true;
         getSSLDNSParams();
+      } else {
+        checkStatus();
       }
+    }
+  })
+}
+
+
+const checkSSLStatus = () => {
+  fullscreenLoading.value = true;
+  http.post("/api/setup", {"action": "check_ssl", "step": "ssl"}).then((res) => {
+    if (res.data.status === "success") {
       checkStatus();
+    } else if (res.data.status === "running") {
+      fullscreenLoading.value = false;
+      ElMessage.info(lang.wait_desc);
+    } else if (res.data.status === "error") {
+      ElMessage.error(res.data.error);
+      setSSLConfig();
+    } else {
+      setSSLConfig();
     }
   })
 }
@@ -688,8 +707,7 @@ const next = () => {
       break
     case 5:
       if (dnsChecking.value) {
-        fullscreenLoading.value = true;
-        waitDesc.value = lang.dns_challenge_wait;
+        checkSSLStatus();
       } else {
         setSSLConfig();
       }
