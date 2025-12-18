@@ -294,7 +294,7 @@
             :loading="fullscreenLoading"
             class="next-btn"
             @click="next">
-            {{ (active === 5 && dnsChecking) ? lang.check : lang.next }}
+            {{ (active === 5 && dnsChecking) ? (sslError ? lang.retry : lang.check) : lang.next }}
             <el-icon class="el-icon--right"><ArrowRight /></el-icon>
         </el-button>
          <el-button 
@@ -486,21 +486,16 @@ const setDbConfig = () => {
 }
 
 const getDNSConfig = () => {
-  console.log("DEBUG: Fetching DNS config...")
   dnsLoading.value = true
   http.post("/api/setup", {"action": "get", "step": "dns"}).then((res) => {
     dnsLoading.value = false
-    console.log("DEBUG: getDNSConfig response:", res)
     if (res.errorNo !== 0) {
-      console.error("DEBUG: getDNSConfig error:", res.errorMsg)
       ElMessage.error(res.errorMsg)
     } else {
-      console.log("DEBUG: Setting dnsInfos with:", res.data)
       dnsInfos.value = res.data
     }
   }).catch(err => {
     dnsLoading.value = false
-    console.error("DEBUG: getDNSConfig network error:", err)
   })
 }
 
