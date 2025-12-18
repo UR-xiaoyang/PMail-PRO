@@ -115,6 +115,7 @@ let lang = {
     "config_complete": "Configuration is complete!",
     "enter_mailbox": "Enter Mailbox",
     "check": "Check",
+    "retry": "Retry",
     "noSSLWarn": "Warning: Without SSL, your password and emails will be transmitted in clear text, which is very dangerous. HTTPS, SMTPS, IMAPS, and POP3S services will not be started."
 };
 
@@ -236,6 +237,7 @@ const zhCN = {
     "config_complete": "配置已完成！",
     "enter_mailbox": "进入邮箱",
     "check": "检测",
+    "retry": "重试",
     "noSSLWarn": "警告：不启用SSL将导致您的密码和邮件内容以明文传输，这非常危险。HTTPS、SMTPS、IMAPS和POP3S服务将不会启动。"
 }
 

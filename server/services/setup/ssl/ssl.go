@@ -146,7 +146,9 @@ func renewCertificate(privateKey *ecdsa.PrivateKey, cfg *config.Config) error {
 
 	domains := []string{cfg.WebDomain}
 	for _, domain := range cfg.Domains {
-		domains = append(domains, "*."+domain)
+		if cfg.SSLType == config.SSLTypeAutoDNS {
+			domains = append(domains, "*."+domain)
+		}
 		domains = append(domains, domain)
 	}
 
@@ -228,7 +230,9 @@ func generateCertificate(privateKey *ecdsa.PrivateKey, cfg *config.Config, newAc
 
 	domains := []string{cfg.WebDomain}
 	for _, domain := range cfg.Domains {
-		domains = append(domains, "*."+domain)
+		if cfg.SSLType == config.SSLTypeAutoDNS {
+			domains = append(domains, "*."+domain)
+		}
 		domains = append(domains, domain)
 	}
 

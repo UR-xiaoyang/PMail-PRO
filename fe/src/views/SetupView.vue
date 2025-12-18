@@ -192,6 +192,9 @@
                <el-alert :closable="false" title="Warning!" type="error" center show-icon
                     v-if="active === 5 && sslSettings.type === 0 && port !== 80" :description="lang.autoSSLWarn" class="mb-4"/>
 
+               <el-alert :closable="false" title="SSL Error" type="error" center show-icon
+                    v-if="sslError" :description="sslError" class="mb-4"/>
+
               <div class="desc">
                 <h2>{{ lang.setSSL }}</h2>
               </div>
@@ -366,6 +369,7 @@ const sslSettings = reactive({
 })
 
 
+const sslError = ref('')
 const active = ref(0)
 const fullscreenLoading = ref(false)
 const dnsChecking = ref(false)
@@ -531,6 +535,7 @@ const handleCrtChange = (file) => {
 }
 
 const setSSLConfig = () => {
+  sslError.value = ''
   fullscreenLoading.value = true;
 
   let sslType = sslSettings.type;
@@ -597,8 +602,9 @@ const checkSSLStatus = () => {
       fullscreenLoading.value = false;
       ElMessage.info(lang.wait_desc);
     } else if (res.data.status === "error") {
+      sslError.value = res.data.error;
+      fullscreenLoading.value = false;
       ElMessage.error(res.data.error);
-      setSSLConfig();
     } else {
       setSSLConfig();
     }
@@ -707,7 +713,11 @@ const next = () => {
       break
     case 5:
       if (dnsChecking.value) {
-        checkSSLStatus();
+        if (sslError.value) {
+          setSSLConfig();
+        } else {
+          checkSSLStatus();
+        }
       } else {
         setSSLConfig();
       }
